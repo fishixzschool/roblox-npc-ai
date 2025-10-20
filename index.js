@@ -1,33 +1,34 @@
 import express from "express";
-import fetch from "node-fetch";
+import { GoogleGenAI } from "@google/genai";
 
 const app = express();
 app.use(express.json());
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY; // vamos colocar no Render depois
+// Inicializa o SDK com a chave do Gemini do Render
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY
+});
 
 app.post("/chat", async (req, res) => {
   const { user, text } = req.body;
 
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: "user",
-              parts: [{ text: `${user}: ${text}` }]
-            }
-          ]
-        })
-      }
-    );
+    // Chama o modelo Gemini via SDK
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: `${user}: ${text}` }]
+        }
+      ]
+    });
 
-    const data = await response.json();
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Sem resposta.";
+    // Pega a resposta real do Gemini
+    const reply = response.candidates?.[0]?.content?.[0]?.parts?.[0]?.text || "Sem resposta";
+
+    console.log(`Mensagem de ${user}: ${text}`);
+    console.log(`Resposta do Gemini: ${reply}`);
 
     res.json({ reply });
   } catch (err) {
@@ -37,7 +38,7 @@ app.post("/chat", async (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  res.send("API do NPC com Gemini está rodando.");
+  res.send("API do NPC com Gemini (SDK) está rodando.");
 });
 
 app.listen(3000, () => console.log("Servidor rodando na porta 3000"));
