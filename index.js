@@ -24,8 +24,11 @@ app.post("/chat", async (req, res) => {
       ]
     });
 
-    // Pega a resposta real do Gemini
-    const reply = response.candidates?.[0]?.content?.[0]?.parts?.[0]?.text || "Sem resposta";
+    // === DEBUG: imprime o JSON completo ===
+    console.log("Resposta bruta do Gemini:", JSON.stringify(response, null, 2));
+
+    // === PEGAR A RESPOSTA CORRETA ===
+    const reply = response.candidates?.[0]?.content?.parts?.[0]?.text || "Sem resposta";
 
     console.log(`Mensagem de ${user}: ${text}`);
     console.log(`Resposta do Gemini: ${reply}`);
